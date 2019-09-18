@@ -1,22 +1,31 @@
 (ns ring-app.core
   (:require [ring.adapter.jetty :as jetty]
             [ring.util.http-response :as response]
+            [compojure.core :as compojure]
             [ring.middleware.reload :refer [wrap-reload]]
             [ring.middleware.format :refer [wrap-restful-format]]))
-(defn foo
-  "I don't do a whole lot."
-  [x]
-  (println x "Hello, World!"))
 
-;; (defn handler [request-map]
-;;   (response/ok
-;;    (str "<html><body> your IP is: "
-;;         (:remote-addr request-map)
-;;         "</body></html>")))
-
-(defn handler [request]
+(defn response-handler [request]
   (response/ok
-   {:result (-> request :params :id)}))
+   (str "<html><body> your IP is: "
+        (:remote-addr request)
+        "</body></html>")))
+
+;; (defn handler [request]
+;;   (println request)
+;;   (response/ok
+;;    {:result (-> request :params :id)}))
+
+;; (def handler
+;;   (compojure/routes
+;;    (compojure/GET "/" request response-handler)
+;;    (compojure/GET "/:id" [id] (str "<p>the id is: " id "</p>" ))))
+
+(compojure/defroutes handler
+  (compojure/GET "/" request response-handler)
+  (compojure/GET "/:id" [id] (str "<p>the id is: " id "</p>" ))
+  (compojure/GET "/foo" request (interpose ", " (keys request)))
+  (compojure/POST "/json" [id] (response/ok {:result id})))
 
 (defn wrap-nocache [handler]
   (fn [request]
